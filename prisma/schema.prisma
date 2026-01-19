@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  // Authentication
+  password  String? // Hashed password for Admin access
+  role      String   @default("AGENT") // AGENT, SUPER_ADMIN, PARTNER
+
+  cluster   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // FieldLink: Auth
+  pinCode   String? // For offline/pincode login
+  active    Boolean @default(true)
+}
+
+model Beneficiary {
+  id             String   @id @default(cuid())
+  vNIN           String?  @unique // Virtual NIN (if available)
+  firstName      String
+  lastName       String
+  dateOfBirth    DateTime
+  phone          String?
+  gender         String
+  
+  // Location
+  lga            String
+  state          String
+  community      String?
+  
+  // Vulnerability
+  vulnerabilityScore Float @default(0.0)
+  status         String @default("active") // active, flagged, graduated
+  
+  // Metadata
+  biometricHash  String? // Placeholder for biometric logic
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  enrollments    Enrollment[]
+}
+
+model Program {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // CASH_TRANSFER, SKILLS_TRAINING, AGRO_INPUT
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id            String   @id @default(cuid())
+  beneficiaryId String
+  programId     String
+  status        String   // ENROLLED, COMPLETED, DISBURSED
+  dateEnrolled  DateTime @default(now())
+  
+  beneficiary   Beneficiary @relation(fields: [beneficiaryId], references: [id])
+  program       Program     @relation(fields: [programId], references: [id])
+}
+
+model OrchestrationLog {
+  id        String   @id @default(cuid())
+  type      String   // INFO, WARNING, CRITICAL, SUCCESS
+  title     String
+  message   String
+  metadata  Json?    // Flexible storage for context (e.g. beneficiaryId, region)
+  createdAt DateTime @default(now())
+}
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("TEXT") // TEXT, IMAGE, JSON
+  updatedAt DateTime @updatedAt
+}
+
+model NavigationItem {
+  id        String   @id @default(cuid())
+  title     String
+  href      String
+  order     Int      @default(0)
+  group     String   @default("HEADER") // HEADER, FOOTER_MAIN, FOOTER_LEGAL
+  target    String?  @default("_self")
+}
+
+model CustomPage {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   Json     // Structured content blocks
+  theme     Json?    // Page-specific overrides
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ThemeConfig {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  primary     String   @default("#046379")
+  secondary   String   @default("#01A651")
+  accent      String   @default("#F59E0B")
+  background  String   @default("#F8FAFC")
+  isDefault   Boolean  @default(false)
+}
+
+model ApiService {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  apiKey      String?
+  apiSecret   String?
+  endpoint    String?
+  environment String   @default("PRODUCTION") // SANDBOX, PRODUCTION
+  status      String   @default("ACTIVE")    // ACTIVE, INACTIVE, DEPRECATED
+  metadata    Json?
+  updatedAt   DateTime @updatedAt
+}

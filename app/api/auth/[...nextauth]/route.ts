@@ -3,4 +3,14 @@ import { authOptions } from "@/lib/auth"
 
 const handler = NextAuth(authOptions)
 
-export { handler as GET, handler as POST }
+async function GET_handler(req: any, res: any) {
+    console.log("GET /api/auth request received")
+    return await handler(req, res)
+}
+
+async function POST_handler(req: any, res: any) {
+    console.log("POST /api/auth request received")
+    return await handler(req, res)
+}
+
+export { GET_handler as GET, POST_handler as POST }

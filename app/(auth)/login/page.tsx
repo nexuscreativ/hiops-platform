@@ -11,7 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-export default function AdminLoginPage() {
+import { Suspense } from "react"
+
+function LoginContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const callbackUrl = searchParams.get("callbackUrl") || "/console/brain"
@@ -127,5 +129,13 @@ export default function AdminLoginPage() {
                 </div>
             </Card>
         </div>
+    )
+}
+
+export default function AdminLoginPage() {
+    return (
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-slate-50"><Loader2 className="h-8 w-8 animate-spin text-[#046379]" /></div>}>
+            <LoginContent />
+        </Suspense>
     )
 }
